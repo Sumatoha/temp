@@ -22,17 +22,15 @@ func Run(request events.APIGatewayProxyRequest) error {
 		return err
 	}
 
+	bot := tgbotapi.BotAPI{
+		Token: opts.TelegramErrorsBotToken,
+	}
+
 	orderCli, err := order.NewClient()
 	if err != nil {
 		return err
 	}
 	defer orderCli.Close(ctx)
-
-	bot, err := tgbotapi.NewBotAPI(opts.TelegramErrorsBotToken)
-	if err != nil {
-		log.Println("Error creating bot:", err)
-		return err
-	}
 
 	update := tgbotapi.Update{}
 	err = json.Unmarshal([]byte(request.Body), &update)
@@ -52,7 +50,7 @@ func Run(request events.APIGatewayProxyRequest) error {
 		if len(failedOrders) > 0 {
 			messageText = fmt.Sprintf("Список ошибочных заказов для ресторана %d за последние сутки (%s):\n", update.Message.Text, startDateStr)
 			for _, order := range failedOrders {
-				orderInfo := fmt.Sprintf("ID: %d, Статус: %s, Создан: %s, Агрегатор:%s, Состав:%v", order.ID, order.Status, order.CreatedAt.Format("2006-01-02 15:04:05"), order.DeliveryService, order.Products)
+				orderInfo := fmt.Sprintf("ID: %d, Статус: %s, Создан: %s, Агрегатор:%s, Состав:%", order.ID, order.Status, order.CreatedAt.Format("2006-01-02 15:04:05"), order.DeliveryService, order.Products)
 				messageText += "- " + orderInfo + "\n"
 			}
 		} else {
